@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# TODO
+# - atomize specific rev by invoking rebase?
+# - support splitting by hunk
+
+
+set -e
+
+OPTIONS_SPEC="\
+git atomize
+--
+"
+
+. "$(git --exec-path)/git-sh-setup"
+require_clean_work_tree atomize "Please commit or stash them"
+set_reflog_action atomize
+
+
+head=$(git rev-parse HEAD)
+
+if [ "$( git show --pretty=format: --name-only $head | wc -l )" = 1 ]; then
+  echo "Not atomizing ($head only changes a single file)"
+  exit
+fi
+
+
+git reset $head^
+
+git commit --allow-empty -C $head
+
+
+empty=$(git rev-parse HEAD)
+git show --pretty=format: --name-only -z $head | xargs -0 -n 1 git commit --fixup $empty
+
+echo "Finished atomizing $head"
+
+echo "To recombine your commits, run git rebase --interactive --keep-empty --autosquash"
