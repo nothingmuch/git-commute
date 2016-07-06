@@ -1,0 +1,4 @@
+#!/bin/sh
+
+git branch -vv | egrep "\[$( git symbolic-ref -q HEAD  | sed 's/^refs\/heads\///' )(:.+?)?\]"
+
